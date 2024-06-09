@@ -8,4 +8,24 @@
         <category>world</category>
       </categories>
   </entry>
+  <entry>
+    <title>基于Overflow搭建的骰娘</title>
+    <url>/2024/06/10/DiceOnOverflow/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h1 id="Overflow是什么"><a href="#Overflow是什么" class="headerlink" title="Overflow是什么"></a>Overflow是什么</h1><p><a href="https://mirai.mrxiaom.top/">Overflow</a>是 mirai 对于 Onebot 的转接器、适配器，桥接在 mirai 接口与 Onebot 实现中，使得用户可以在大部分标准 Onebot 实现上使用 mirai 插件 (或其它业务实现)。<br>由于支持使用mirai插件，那便可使用<a href="https://v2docs.kokona.tech/zh/latest/index.html#">Dice!</a>插件。</p>
+<p>具体方法如下。</p>
+<hr>
+<p>首先要选择你喜欢的Onebot协议，Overflow的<a href="https://mirai.mrxiaom.top/docs/UserManual.html">用户手册</a>中提供了几种Onebot协议，由于我是在1.5G的Orangepi Zero3上部署的，为了方便与节约内存，所以选择<a href="https://napneko.github.io/zh-CN/guide/getting-started">NapCatQQ</a>。  </p>
+<ol>
+<li>安装QQ<br>前往<a href="https://im.qq.com/linuxqq/index.shtml">QQ官网</a>下载对应版本的linuxqq并进行安装。  </li>
+<li>下载并安装NapCatQQ<br>前往<a href="https://github.com/NapNeko/NapCatQQ/releases">NapCatQQ的github</a>上下载相应架构的NapCat压缩包并进行解压。<br><code>unzip NapCat.linux.arm64.zip &amp;&amp; cd NapNeko.linux.arm64</code>  </li>
+<li>运行NapCat<br><code>chmod u+x ./napcat.sh</code><br><code>./napcat.sh</code><br>此时，终端窗口会出现一个二维码，扫码登录后便可Ctrl+c退出进程。之后如需再次登录相同账号，可通过<code>./napcat.sh -q &lt;你的QQ&gt;</code>进行快速登录而不用扫码。  </li>
+<li>配置NapCat<br>进入config文件夹，打开onebot11_&lt;你的QQ号&gt;，将“ws”（即为正向websocket服务）中的“enable”改为“true”。  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&quot;ws&quot;:&#123;  </span><br><span class="line">&quot;enable&quot;: true,</span><br><span class="line">&quot;host&quot;: &quot;&quot;,</span><br><span class="line">&quot;port&quot;:3001</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure></li>
+<li>下载整合包<br>在<a href="https://mirai.mrxiaom.top/">官网</a>下载最新版本的整合包并进行解压缩。  </li>
+<li>运行overflow<br>进入overflow目录，<code>sudo bash start.sh</code>  </li>
+<li>安装Dice插件<br><code>git clone --depth=1 https://gitee.com/diceki/mirai-dice-classic</code><br>下载整合包，将mirai-dice-classic文件夹中的Diceki复制到overflow的根目录，plugins中的mirai-native-2.0.5-cp.jar复制到overflow的相应文件夹。  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp Diceki path/to/overflow/</span><br><span class="line">cp plugins/mirai-native-2.0.5-cp.jar path/to/overflow/plugins/</span><br></pre></td></tr></table></figure></li>
+<li>修改overflow配置<br>将overflow目录下的overflow.json里“ws_host”改为“&lt;你的IP&gt;:&lt;ws服务的端口&gt;”，如：<code>&quot;ws_host&quot;: &quot;ws://127.0.0.1:3001&quot;</code>  </li>
+<li>最后一步<br>先启动NapCat登录QQ,再启动overflow进行连接。刚装完插件第一次登录时会安装些组件，需要等一段时间。<br><code>./napcat.sh</code><br><code>sudo bash start.sh</code></li>
+</ol>
+]]></content>
+  </entry>
 </search>
