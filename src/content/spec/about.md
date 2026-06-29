@@ -1,7 +1,7 @@
 
-This website is built with the **Astro** framework using the [Mizuki](https://github.com/LyraVoid/Mizuki) theme.
+This website is built with the **Astro** framework using the [Mizuki](https://github.com/Ge0rGeHero/Ge0rGeHero.github.io) theme.
 
-::github{repo="LyraVoid/Mizuki"}
+::github{repo="Ge0rGeHero/Ge0rGeHero.github.io"}
 
 ## 🌟 Theme Features
 

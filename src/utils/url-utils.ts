@@ -66,9 +66,9 @@ export function getPostUrl(post: any): string {
 
 export function getTagUrl(tag: string): string {
 	if (!tag) {
-		return url("/archive/");
+		return url("/tags/");
 	}
-	return url(`/archive/?tag=${encodeURIComponent(tag.trim())}`);
+	return url(`/tags/${encodeURIComponent(tag.trim())}/`);
 }
 
 export function getCategoryUrl(category: string | null): string {

@@ -1,0 +1,9 @@
+{
+  "title": "云南之旅",
+  "description": "十天假期的云南旅行，体验还不错。",
+  "date": "2024-12-08",
+  "location": "云南",
+  "tags": ["旅行", "风景"],
+  "layout": "masonry",
+  "columns": 3
+}

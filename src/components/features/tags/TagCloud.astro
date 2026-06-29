@@ -1,0 +1,76 @@
+---
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { getTagUrl } from "@utils/url-utils";
+
+interface Props {
+	tags: { name: string; count: number }[];
+}
+
+const { tags } = Astro.props;
+
+const minFontSize = 0.875;
+const maxFontSize = 1.5;
+
+// Unique count values, sorted ascending
+const uniqueCounts = [...new Set(tags.map((t) => t.count))].sort(
+	(a, b) => a - b,
+);
+
+// Simple string hash for consistent hue offset per tag name
+function hashTag(name: string): number {
+	let h = 0;
+	for (let i = 0; i < name.length; i++) {
+		h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+	}
+	return h;
+}
+
+function getFontSize(count: number): string {
+	if (uniqueCounts.length <= 1) return `${minFontSize}rem`;
+	const idx = uniqueCounts.indexOf(count);
+	const ratio = idx / (uniqueCounts.length - 1);
+	const size = minFontSize + (maxFontSize - minFontSize) * ratio;
+	return `${size.toFixed(3)}rem`;
+}
+
+function getHueOffset(name: string): number {
+	return (Math.abs(hashTag(name)) % 61) - 30;
+}
+---
+
+<div class="card-base p-6 onload-animation">
+	<h2 class="text-center text-lg font-medium mb-4">
+		{i18n(I18nKey.tags)}
+	</h2>
+	<div class="flex flex-wrap justify-center gap-2">
+		{
+			tags.map((tag) => (
+				<a
+					href={getTagUrl(tag.name)}
+					class="tag-cloud-link inline-block rounded-lg"
+					style={{
+						fontSize: getFontSize(tag.count),
+						"--hue-offset": `${getHueOffset(tag.name)}`,
+					}}
+				>
+					{tag.name}
+					<span class="text-xs opacity-50 ml-1">{tag.count}</span>
+				</a>
+			))
+		}
+	</div>
+</div>
+
+<style>
+	.tag-cloud-link {
+		padding: 2px 7px;
+		transition: all 0.3s ease;
+		color: oklch(0.65 0.18 calc(var(--hue) + var(--hue-offset, 0)));
+	}
+	.tag-cloud-link:hover {
+		background: var(--card-bg);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		transform: scale(1.05);
+	}
+</style>

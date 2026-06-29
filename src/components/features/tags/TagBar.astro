@@ -1,0 +1,238 @@
+---
+import { getTagUrl, url } from "@utils/url-utils";
+
+interface Props {
+	tags: { name: string; count: number }[];
+	currentTag?: string;
+}
+
+const { tags, currentTag } = Astro.props;
+const tagsUrl = url("/tags/");
+---
+
+<div
+	class="card-base tag-bar p-3 onload-animation"
+	id="tag-bar"
+	data-tags-path={tagsUrl}
+	data-current-tag={currentTag || ""}
+>
+	<div class="tag-bar-inner flex gap-2">
+		<a
+			href={tagsUrl}
+			class="tag-pill text-sm px-3 py-1 rounded-lg whitespace-nowrap flex-shrink-0
+				   transition-colors duration-200 flex items-center justify-center"
+			data-tag-name=""
+		>
+			全部
+		</a>
+		<div class="tag-divider flex-shrink-0"></div>
+		<div class="scroll-area relative">
+			<div class="scroll-fade scroll-fade-left" aria-hidden="true"></div>
+			<div class="tag-scroll flex gap-2 overflow-x-auto">
+				{
+					tags.map((tag) => (
+						<a
+							href={getTagUrl(tag.name)}
+							class="tag-pill text-sm px-3 py-1 rounded-lg whitespace-nowrap
+								   transition-colors duration-200 flex items-center justify-center"
+							data-tag-name={tag.name}
+						>
+							{tag.name}
+							<span class="text-xs opacity-60 ml-1">
+								{tag.count}
+							</span>
+						</a>
+					))
+				}
+			</div>
+			<div class="scroll-fade scroll-fade-right" aria-hidden="true"></div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.tag-bar {
+		margin-bottom: 1rem;
+	}
+	.tag-divider {
+		width: 1px;
+		align-self: stretch;
+		background: var(--line-divider);
+	}
+	.scroll-area {
+		flex: 1;
+		min-width: 0;
+		position: relative;
+	}
+	.scroll-fade {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2.5rem;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 300ms ease-in-out;
+		z-index: 1;
+	}
+	.scroll-fade[data-visible] {
+		opacity: 1;
+	}
+	.scroll-fade-left {
+		left: 0;
+		background: linear-gradient(to left, transparent, var(--card-bg));
+	}
+	.scroll-fade-right {
+		right: 0;
+		background: linear-gradient(to right, transparent, var(--card-bg));
+	}
+	:global(body.wallpaper-transparent) .scroll-fade {
+		display: none;
+	}
+	.tag-scroll {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		scroll-behavior: smooth;
+	}
+	.tag-scroll::-webkit-scrollbar {
+		display: none;
+	}
+	.tag-pill {
+		border: 1.5px solid var(--line-divider);
+		color: var(--btn-content);
+		background: transparent;
+	}
+	.tag-pill:hover {
+		border-color: var(--primary);
+		color: var(--primary);
+		background: transparent;
+	}
+	.tag-pill[data-active] {
+		background: var(--primary);
+		border-color: var(--primary);
+		color: white;
+	}
+	.tag-pill[data-active]:hover {
+		background: var(--primary);
+		border-color: var(--primary);
+		opacity: 0.9;
+	}
+</style>
+
+<script>
+	function updateTagBar() {
+		const bar = document.getElementById("tag-bar");
+		if (!bar) {
+			return;
+		}
+
+		const currentTag =
+			bar.getAttribute("data-current-tag") || "";
+		const pills =
+			bar.querySelectorAll<HTMLAnchorElement>(".tag-pill");
+
+		pills.forEach((pill) => pill.removeAttribute("data-active"));
+
+		if (!currentTag) {
+			// On index page, highlight "全部" pill
+			bar.querySelector<HTMLAnchorElement>(
+				'.tag-pill[data-tag-name=""]',
+			)?.setAttribute("data-active", "");
+		} else {
+			// Highlight the matching tag pill
+			pills.forEach((pill) => {
+				if (
+					pill.getAttribute("data-tag-name") === currentTag
+				) {
+					pill.setAttribute("data-active", "");
+				}
+			});
+		}
+
+		// Auto-scroll to active pill
+		const activePill = bar.querySelector<HTMLAnchorElement>(
+			".tag-pill[data-active]",
+		);
+		const scroll = bar.querySelector<HTMLElement>(".tag-scroll");
+		if (activePill && scroll) {
+			const scrollLeft =
+				activePill.offsetLeft -
+				scroll.offsetLeft -
+				(scroll.clientWidth - activePill.offsetWidth) / 2;
+			scroll.scrollTo({
+				left: Math.max(0, scrollLeft),
+				behavior: "smooth",
+			});
+		}
+	}
+
+	function initScrollFeatures() {
+		const bar = document.getElementById("tag-bar");
+		if (!bar) {
+			return;
+		}
+
+		const scroll = bar.querySelector<HTMLElement>(".tag-scroll");
+		if (!scroll) {
+			return;
+		}
+
+		// Mouse wheel horizontal scrolling
+		scroll.addEventListener(
+			"wheel",
+			(e) => {
+				if (scroll.scrollWidth <= scroll.clientWidth) {
+					return;
+				}
+				e.preventDefault();
+				scroll.scrollLeft += e.deltaY;
+			},
+			{ passive: false },
+		);
+
+		// Listen to scroll for fade hints
+		scroll.addEventListener("scroll", updateScrollHint);
+		window.addEventListener("resize", updateScrollHint);
+		updateScrollHint();
+	}
+
+	function updateScrollHint() {
+		const bar = document.getElementById("tag-bar");
+		if (!bar) {
+			return;
+		}
+		const scroll = bar.querySelector<HTMLElement>(".tag-scroll");
+		const fadeLeft = bar.querySelector<HTMLElement>(".scroll-fade-left");
+		const fadeRight = bar.querySelector<HTMLElement>(
+			".scroll-fade-right",
+		);
+		if (!scroll || !fadeLeft || !fadeRight) {
+			return;
+		}
+
+		const hasOverflow = scroll.scrollWidth > scroll.clientWidth + 1;
+		const atStart = scroll.scrollLeft <= 1;
+		const atEnd =
+			scroll.scrollLeft + scroll.clientWidth >=
+			scroll.scrollWidth - 1;
+
+		if (hasOverflow && !atStart) {
+			fadeLeft.setAttribute("data-visible", "");
+		} else {
+			fadeLeft.removeAttribute("data-visible");
+		}
+
+		if (hasOverflow && !atEnd) {
+			fadeRight.setAttribute("data-visible", "");
+		} else {
+			fadeRight.removeAttribute("data-visible");
+		}
+	}
+
+	updateTagBar();
+	initScrollFeatures();
+	document.addEventListener("astro:page-load", () => {
+		updateTagBar();
+		initScrollFeatures();
+	});
+	document.addEventListener("swup:contentReplaced", updateTagBar);
+</script>

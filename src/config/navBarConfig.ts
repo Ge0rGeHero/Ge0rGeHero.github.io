@@ -132,6 +132,12 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Home,
 		// 预设链接：归档
 		LinkPreset.Archive,
+		// 标签页
+		{
+			name: "标签",
+			url: "/tags/",
+			icon: "material-symbols:tag",
+		},
 
 		// 自定义一级下拉菜单示例：外部链接集合
 		{
@@ -141,7 +147,7 @@ export const navBarConfig: NavBarConfig = {
 			children: [
 				{
 					name: "GitHub",
-					url: "https://github.com/LyraVoid/Mizuki",
+					url: "https://github.com/Ge0rGeHero/Ge0rGeHero.github.io",
 					external: true, // 外部链接，新标签页打开
 					icon: "fa7-brands:github",
 				},
