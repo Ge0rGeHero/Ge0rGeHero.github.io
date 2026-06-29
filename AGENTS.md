@@ -5,7 +5,7 @@
 - Astro 6 static blog template, forked from Fuwari
 - `packageManager`: **pnpm 11.1.3** (enforced via `preinstall` script, `.npmrc`)
 - Node >= 22 required; TypeScript 6.x in strict mode
-- Output: `dist/` (static, deployed to Vercel / GH Pages)
+- Output: `dist/` (static, deployed to GitHub Pages)
 
 ## Commands
 
@@ -114,10 +114,81 @@ Two collections: `posts` (glob: `**/*.{md,mdx}`) and `spec` (special pages). Fro
 
 | Workflow | Triggers | What it runs |
 |---|---|---|
-| `lint.yml` | push/PR to `master` | biome check, astro check, build (with `ENABLE_CONTENT_SYNC=false`) |
-| `deploy.yml` | push to `main` | build + deploy to `pages` branch via JamesIves action |
+| `deploy.yml` | push to `main`, `workflow_dispatch` | build via `withastro/action@v3` → deploy via `actions/deploy-pages@v4` |
 
-**Note**: lint workflow targets `master` branch, deploy workflow targets `main` — inconsistent branch names.
+## GitHub Pages 部署指南
+
+### 仓库要求
+
+- 仓库名必须是 **`<username>.github.io`**（用户站点），否则需在 `astro.config.mjs` 中设置 `base` 路径
+
+### 配置文件修改
+
+部署到 GitHub Pages 前需要修改以下文件：
+
+1. **`src/config/siteConfig.ts`** — 修改 `siteURL`：
+   ```ts
+   siteURL: "https://<username>.github.io/",
+   ```
+2. **`astro.config.mjs`** — `base` 保持 `"/"`（用户站点），项目站点需改为 `"/<repo-name>/"`
+
+3. **源代码中所有原作者的仓库名、域名引用** — 全局搜索替换：
+   - 原仓库名 `LyraVoid/Mizuki` → 你的仓库名
+   - 原域名 `mizuki.mysqil.com` → 你的域名
+   - 涉及的配置文件：`profileConfig.ts`, `pioConfig.ts`, `navBarConfig.ts`, `projects.ts`, `friends.ts`, `Footer.astro`, `about.md` 等
+
+### 部署文件
+
+| 文件 | 作用 |
+|------|------|
+| `.github/workflows/deploy.yml` | Astro 官方 GitHub Pages 部署工作流 |
+| `.nojekyll` | 空文件，阻止 GitHub 用 Jekyll 处理 `.astro` 文件 |
+
+### `deploy.yml` 关键配置
+
+```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: withastro/action@v3
+        with:
+          node-version: 22          # pnpm 11 要求 Node >= 22
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+```
+
+### 常见坑
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| pnpm 报 `node:sqlite` 缺失 | `withastro/action@v3` 默认 Node 20，pnpm 11 需要 Node >= 22 | 在 action 中显式设置 `node-version: 22` |
+| Jekyll 报 YAML 解析错误 | GitHub 自动用 Jekyll 构建 `username.github.io` 仓库，但 `.astro` 文件不是 Jekyll 格式 | 根目录加 `.nojekyll` 空文件 |
+| `package-manager` 版本冲突 | `withastro/action` 的 `package-manager` 参数与 `package.json` 的 `packageManager` 字段冲突 | 不设 `package-manager`，让 action 自动从 `package.json` 读取 |
+| `env:` 块全是注释导致 YAML 无效 | GitHub Actions 不允许空的 `env:` 映射 | 删除空的 `env:` 块，或填入真实环境变量 |
+
+### 部署步骤
+
+1. 在 GitHub 新建仓库 `https://github.com/<username>/<username>.github.io`（空仓库）
+2. 本地推送 `main` 分支到该仓库
+3. GitHub 仓库 Settings → Pages → Source 选择 **"GitHub Actions"**
+4. 每次推送 `main` 分支，Actions 自动构建并部署
 
 ## Key docs (authoritative)
 
